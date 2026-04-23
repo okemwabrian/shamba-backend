@@ -25,14 +25,21 @@ class FieldUpdateSerializer(serializers.ModelSerializer):
 
 
 # -------------------------
-# 🔥 Custom JWT Serializer
+# 🔥 Custom JWT Serializer (FIXED)
 # -------------------------
 class CustomTokenSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
-        # ✅ Add extra user info
-        data["role"] = self.user.role
-        data["username"] = self.user.username
+        user = self.user
+
+        # ✅ FIX: Ensure admin is correctly detected
+        if user.is_staff or user.is_superuser:
+            role = "ADMIN"
+        else:
+            role = user.role if hasattr(user, 'role') and user.role else "AGENT"
+
+        data["role"] = role
+        data["username"] = user.username
 
         return data
